@@ -1,0 +1,27 @@
+# Bağımlılıklar
+node_modules/
+
+# Ortam ve gizli bilgiler
+.env
+.env.local
+.env.*.local
+
+# Veritabanı
+data/*.db
+data/*.db-journal
+
+# Yüklenen dosyalar
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Loglar ve geçici
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
