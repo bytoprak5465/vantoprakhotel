@@ -13,14 +13,11 @@ try { db.cleanupOrphanedRoomData(); } catch (_) {}
 try { db.syncGalleryFromAllSources(); } catch (_) {}
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'otel-jwt-gizli-anahtar-degistirin';
-const BASE_URL = (process.env.BASE_URL || '').trim() || 'http://localhost:' + (process.env.PORT || 3000);
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const PORT = process.env.PORT || 8080;
 
-[DATA_DIR, UPLOADS_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+app.listen(PORT, () => {
+  console.log(`Otel sitesi: http://localhost:${PORT}`);
+  console.log(`Admin: http://localhost:${PORT}/admin/`);
 });
 
 // Mail gönderimi: .env içinde MAIL_ENABLED=true yoksa KAPALI. Açmak için .env'e MAIL_ENABLED=true ekleyin.
