@@ -38,7 +38,7 @@ const SMTP_PASS = process.env.SMTP_PASS || process.env.MAIL_PASS;
 const mailTransporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST || 'smtp.gmail.com',
   port: Number(process.env.MAIL_PORT || 587),
- secure:'true',
+ secure: true,
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS
