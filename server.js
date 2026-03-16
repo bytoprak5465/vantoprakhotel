@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -26,15 +28,37 @@ const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 // Mail gönderimi: .env içinde MAIL_ENABLED=true yoksa KAPALI. Açmak için .env'e MAIL_ENABLED=true ekleyin.
 const MAIL_ENABLED = process.env.MAIL_ENABLED === 'true' || process.env.MAIL_ENABLED === '1';
 
+// Gmail SMTP ayarları (Railway ile uyumlu)
+// Tercihen şu environment değişkenlerini kullanır:
+// - SMTP_USER / SMTP_PASS (yeni isimler)
+// - Aksi halde geriye dönük uyumluluk için MAIL_USER / MAIL_PASS
+const SMTP_USER = process.env.SMTP_USER || process.env.MAIL_USER;
+const SMTP_PASS = process.env.SMTP_PASS || process.env.MAIL_PASS;
+
 const mailTransporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT || 465),
-  secure: Number(process.env.MAIL_PORT || 465) === 465,
+  host: process.env.MAIL_HOST || 'smtp.gmail.com',
+  port: Number(process.env.MAIL_PORT || 587),
+  secure: false,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS
+    user: SMTP_USER,
+    pass: SMTP_PASS
   }
 });
+
+async function sendMail(to, subject, text) {
+  if (!MAIL_ENABLED) {
+    console.log('[MAIL] Disabled, skipping sendMail to', to);
+    return;
+  }
+  if (!to || !subject || !text) return;
+
+  await mailTransporter.sendMail({
+    from: process.env.MAIL_FROM || SMTP_USER,
+    to,
+    subject,
+    text
+  });
+}
 
 async function sendReservationMailToGuest(reservation) {
   if (!reservation || !reservation.email) return;
