@@ -35,10 +35,20 @@ const MAIL_ENABLED = process.env.MAIL_ENABLED === 'true' || process.env.MAIL_ENA
 const SMTP_USER = process.env.SMTP_USER || process.env.MAIL_USER;
 const SMTP_PASS = process.env.SMTP_PASS || process.env.MAIL_PASS;
 
+const MAIL_HOST = (process.env.MAIL_HOST || 'smtp.gmail.com').trim();
+const MAIL_PORT = Number(process.env.MAIL_PORT || 587);
+const MAIL_SECURE =
+  (process.env.MAIL_SECURE === 'true' || process.env.MAIL_SECURE === '1')
+    ? true
+    : (process.env.MAIL_SECURE === 'false' || process.env.MAIL_SECURE === '0')
+      ? false
+      : MAIL_PORT === 465;
+
 const mailTransporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST || 'smtp.gmail.com',
-  port: Number(process.env.MAIL_PORT || 587),
-  secure: true,
+  host: MAIL_HOST,
+  port: MAIL_PORT,
+  secure: MAIL_SECURE,
+  family: 4,
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS
@@ -52,12 +62,18 @@ async function sendMail(to, subject, text) {
   }
   if (!to || !subject || !text) return;
 
-  await mailTransporter.sendMail({
-    from: process.env.MAIL_FROM || SMTP_USER,
-    to,
-    subject,
-    text
-  });
+  try {
+    await mailTransporter.sendMail({
+      from: process.env.MAIL_FROM || SMTP_USER,
+      to,
+      subject,
+      text
+    });
+
+    console.log("Mail gönderildi ✅");
+  } catch (err) {
+    console.error("Mail hatası ❌:", err);
+  }
 }
 
 async function sendReservationMailToGuest(reservation) {
@@ -123,12 +139,17 @@ async function sendReservationMailToGuest(reservation) {
 </body>
 </html>`;
 
-  await mailTransporter.sendMail({
-    from: process.env.MAIL_FROM || process.env.MAIL_USER,
-    to: reservation.email,
-    subject: `${hotelName} – Rezervasyon Talebiniz (${reservation.id})`,
-    html
-  });
+  try {
+    await mailTransporter.sendMail({
+      from: process.env.MAIL_FROM || SMTP_USER,
+      to: reservation.email,
+      subject: `${hotelName} – Rezervasyon Talebiniz (${reservation.id})`,
+      html
+    });
+    console.log('Müşteri maili gönderildi ✅:', reservation.email);
+  } catch (err) {
+    console.error('Müşteri maili gönderilemedi ❌:', err && err.message ? err.message : err);
+  }
 }
 
 async function sendReservationMailToAdmin(reservation) {
@@ -184,12 +205,17 @@ async function sendReservationMailToAdmin(reservation) {
 </body>
 </html>`;
 
-  await mailTransporter.sendMail({
-    from: process.env.MAIL_FROM || process.env.MAIL_USER,
-    to: adminEmail,
-    subject: `${hotelName} – Yeni Rezervasyon Talebi (${reservation.id})`,
-    html
-  });
+  try {
+    await mailTransporter.sendMail({
+      from: process.env.MAIL_FROM || SMTP_USER,
+      to: adminEmail,
+      subject: `${hotelName} – Yeni Rezervasyon Talebi (${reservation.id})`,
+      html
+    });
+    console.log('Admin maili gönderildi ✅:', adminEmail);
+  } catch (err) {
+    console.error('Admin maili gönderilemedi ❌:', err && err.message ? err.message : err);
+  }
 }
 
 const uploadsAbsolute = path.resolve(UPLOADS_DIR);
